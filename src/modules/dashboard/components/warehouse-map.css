@@ -1,0 +1,50 @@
+/* Custom styles for Mapbox popup */
+.mapboxgl-popup-close-button {
+  /* Increase size for better clickability */
+  width: 24px;
+  height: 24px;
+
+  /* Position closer to edge but with minimal spacing */
+  right: 4px;
+  top: 4px;
+
+  /* Improve visual appearance */
+  font-size: 18px;
+  line-height: 24px;
+
+  /* Rounded background */
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+
+  /* Add subtle shadow */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+
+  /* Center the X */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Text styling */
+  color: #666;
+  font-weight: 500;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background: rgba(255, 255, 255, 1);
+  color: #333;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
+
+.mapboxgl-popup-close-button:active {
+  transform: scale(0.95);
+}
+
+/* Improve popup appearance without excess padding */
+.mapboxgl-popup-content {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}

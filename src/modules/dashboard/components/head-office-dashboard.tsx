@@ -154,7 +154,7 @@ export function HeadOfficeDashboard() {
             </div>
           </CardHeader>
           <CardContent className="flex-1 p-0">
-            <WarehouseMap warehouses={warehouseTemperatures} />
+            <WarehouseMap warehouses={warehouseTemperatures} filter={activeFilter} />
           </CardContent>
         </Card>
 

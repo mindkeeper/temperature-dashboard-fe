@@ -7,4 +7,9 @@ describe("env", () => {
     expect(env.VITE_GOOGLE_MAPS_API_KEY).toBeDefined();
     expect(typeof env.VITE_GOOGLE_MAPS_API_KEY).toBe("string");
   });
+
+  it("validates VITE_GOOGLE_MAPS_MAP_ID exists", () => {
+    expect(env.VITE_GOOGLE_MAPS_MAP_ID).toBeDefined();
+    expect(typeof env.VITE_GOOGLE_MAPS_MAP_ID).toBe("string");
+  });
 });

@@ -1,51 +1,169 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import { describe, it, expect, vi } from "vitest";
 
 import type { WarehouseTemperatureAggregate } from "../../hooks/use-warehouse-temperatures";
 import { WarehouseMap } from "../warehouse-map";
 
-// Mock the Google Maps library
+// Mock Google Maps
 vi.mock("@vis.gl/react-google-maps", () => ({
   APIProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Map: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="google-map">{children}</div>
-  ),
-  AdvancedMarker: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="map-marker">{children}</div>
-  ),
-  InfoWindow: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="info-window">{children}</div>
-  ),
+  Map: ({ children }: { children: React.ReactNode }) => <div data-testid="map">{children}</div>,
+  AdvancedMarker: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  Pin: () => <div data-testid="pin" />,
 }));
 
-describe("WarehouseMap", () => {
-  it("renders Google Map with markers", () => {
-    const warehouses: WarehouseTemperatureAggregate[] = [
+const mockWarehouses: WarehouseTemperatureAggregate[] = [
+  {
+    warehouseId: "w1",
+    warehouseName: "Warehouse 1",
+    address: "Address 1",
+    latitude: -6.2,
+    longitude: 106.8,
+    concessionaireName: "Concessionaire A",
+    averageTemperature: -20,
+    unit: "C",
+    deviceCount: 10,
+    reportingDeviceCount: 8,
+    lastUpdate: Date.now(),
+    status: "green",
+  },
+  {
+    warehouseId: "w2",
+    warehouseName: "Warehouse 2",
+    address: "Address 2",
+    latitude: -6.3,
+    longitude: 106.9,
+    concessionaireName: "Concessionaire B",
+    averageTemperature: -15,
+    unit: "C",
+    deviceCount: 20,
+    reportingDeviceCount: 20,
+    lastUpdate: Date.now(),
+    status: "orange",
+  },
+  {
+    warehouseId: "w3",
+    warehouseName: "Warehouse 3",
+    address: "Address 3",
+    latitude: -6.4,
+    longitude: 107.0,
+    concessionaireName: "Concessionaire C",
+    averageTemperature: -5,
+    unit: "C",
+    deviceCount: 15,
+    reportingDeviceCount: 15,
+    lastUpdate: Date.now(),
+    status: "red",
+  },
+];
+
+describe("WarehouseMap - Filtering", () => {
+  it("shows all warehouses when no filter is active", () => {
+    const { getAllByTestId } = render(<WarehouseMap warehouses={mockWarehouses} filter={null} />);
+
+    const pins = getAllByTestId("pin");
+    expect(pins).toHaveLength(3);
+  });
+
+  it("filters to warehouses with offline devices when offlineDevices filter active", () => {
+    const warehousesWithOffline: WarehouseTemperatureAggregate[] = [
       {
         warehouseId: "w1",
         warehouseName: "Warehouse 1",
-        address: "123 Main St",
+        address: "Address 1",
         latitude: -6.2,
         longitude: 106.8,
         concessionaireName: "Concessionaire A",
-        averageTemperature: -18,
+        averageTemperature: -20,
         unit: "C",
-        deviceCount: 2,
-        reportingDeviceCount: 2,
+        deviceCount: 10,
+        reportingDeviceCount: 8, // 2 offline
         lastUpdate: Date.now(),
         status: "green",
       },
+      {
+        warehouseId: "w2",
+        warehouseName: "Warehouse 2",
+        address: "Address 2",
+        latitude: -6.3,
+        longitude: 106.9,
+        concessionaireName: "Concessionaire B",
+        averageTemperature: -15,
+        unit: "C",
+        deviceCount: 10,
+        reportingDeviceCount: 10, // 0 offline
+        lastUpdate: Date.now(),
+        status: "orange",
+      },
     ];
 
-    render(<WarehouseMap warehouses={warehouses} />);
+    const { getAllByTestId } = render(
+      <WarehouseMap warehouses={warehousesWithOffline} filter="offlineDevices" />
+    );
 
-    expect(screen.getByTestId("google-map")).toBeInTheDocument();
-    expect(screen.getByTestId("map-marker")).toBeInTheDocument();
+    const pins = getAllByTestId("pin");
+    expect(pins).toHaveLength(1); // Only w1 has offline devices
   });
 
-  it("renders empty state when no warehouses", () => {
-    render(<WarehouseMap warehouses={[]} />);
+  it("filters to warehouses at risk (orange/red) when atRisk filter active", () => {
+    const { getAllByTestId } = render(<WarehouseMap warehouses={mockWarehouses} filter="atRisk" />);
 
-    expect(screen.getByText(/no warehouses to display/i)).toBeInTheDocument();
+    const pins = getAllByTestId("pin");
+    expect(pins).toHaveLength(2); // w2 (orange) and w3 (red)
+  });
+
+  it("filters to stale warehouses when staleData filter active", () => {
+    const now = Date.now();
+    const warehousesWithStale: WarehouseTemperatureAggregate[] = [
+      {
+        warehouseId: "w1",
+        warehouseName: "Warehouse 1",
+        address: "Address 1",
+        latitude: -6.2,
+        longitude: 106.8,
+        concessionaireName: "Concessionaire A",
+        averageTemperature: -20,
+        unit: "C",
+        deviceCount: 10,
+        reportingDeviceCount: 8,
+        lastUpdate: now - 10 * 60 * 1000, // 10 min - fresh
+        status: "green",
+      },
+      {
+        warehouseId: "w2",
+        warehouseName: "Warehouse 2",
+        address: "Address 2",
+        latitude: -6.3,
+        longitude: 106.9,
+        concessionaireName: "Concessionaire B",
+        averageTemperature: -15,
+        unit: "C",
+        deviceCount: 20,
+        reportingDeviceCount: 20,
+        lastUpdate: now - 20 * 60 * 1000, // 20 min - stale
+        status: "orange",
+      },
+      {
+        warehouseId: "w3",
+        warehouseName: "Warehouse 3",
+        address: "Address 3",
+        latitude: -6.4,
+        longitude: 107.0,
+        concessionaireName: "Concessionaire C",
+        averageTemperature: -5,
+        unit: "C",
+        deviceCount: 15,
+        reportingDeviceCount: 15,
+        lastUpdate: null, // No data - stale
+        status: "red",
+      },
+    ];
+
+    const { getAllByTestId } = render(
+      <WarehouseMap warehouses={warehousesWithStale} filter="staleData" />
+    );
+
+    const pins = getAllByTestId("pin");
+    expect(pins).toHaveLength(2); // w2 and w3 are stale
   });
 });
