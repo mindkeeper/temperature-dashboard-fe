@@ -52,7 +52,7 @@ export function KpiCard({
       <Card
         className={cn(
           "cursor-pointer transition-all hover:shadow-md",
-          isActive && "ring-2 ring-blue-500"
+          isActive && "ring-ring ring-2"
         )}
         onClick={onClick}
         role="button"
