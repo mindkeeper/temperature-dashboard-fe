@@ -4,12 +4,17 @@ import { describe, it, expect, vi } from "vitest";
 import type { WarehouseTemperatureAggregate } from "../../hooks/use-warehouse-temperatures";
 import { WarehouseMap } from "../warehouse-map";
 
-// Mock Google Maps
-vi.mock("@vis.gl/react-google-maps", () => ({
-  APIProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Map: ({ children }: { children: React.ReactNode }) => <div data-testid="map">{children}</div>,
-  AdvancedMarker: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  Pin: () => <div data-testid="pin" />,
+// Mock Mapbox
+vi.mock("react-map-gl/mapbox", () => ({
+  default: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="mapbox-map">{children}</div>
+  ),
+  Marker: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="map-marker">{children}</div>
+  ),
+  Popup: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="map-popup">{children}</div>
+  ),
 }));
 
 const mockWarehouses: WarehouseTemperatureAggregate[] = [
@@ -61,8 +66,8 @@ describe("WarehouseMap - Filtering", () => {
   it("shows all warehouses when no filter is active", () => {
     const { getAllByTestId } = render(<WarehouseMap warehouses={mockWarehouses} filter={null} />);
 
-    const pins = getAllByTestId("pin");
-    expect(pins).toHaveLength(3);
+    const markers = getAllByTestId("map-marker");
+    expect(markers).toHaveLength(3);
   });
 
   it("filters to warehouses with offline devices when offlineDevices filter active", () => {
@@ -101,15 +106,15 @@ describe("WarehouseMap - Filtering", () => {
       <WarehouseMap warehouses={warehousesWithOffline} filter="offlineDevices" />
     );
 
-    const pins = getAllByTestId("pin");
-    expect(pins).toHaveLength(1); // Only w1 has offline devices
+    const markers = getAllByTestId("map-marker");
+    expect(markers).toHaveLength(1); // Only w1 has offline devices
   });
 
   it("filters to warehouses at risk (orange/red) when atRisk filter active", () => {
     const { getAllByTestId } = render(<WarehouseMap warehouses={mockWarehouses} filter="atRisk" />);
 
-    const pins = getAllByTestId("pin");
-    expect(pins).toHaveLength(2); // w2 (orange) and w3 (red)
+    const markers = getAllByTestId("map-marker");
+    expect(markers).toHaveLength(2); // w2 (orange) and w3 (red)
   });
 
   it("filters to stale warehouses when staleData filter active", () => {
@@ -163,7 +168,7 @@ describe("WarehouseMap - Filtering", () => {
       <WarehouseMap warehouses={warehousesWithStale} filter="staleData" />
     );
 
-    const pins = getAllByTestId("pin");
-    expect(pins).toHaveLength(2); // w2 and w3 are stale
+    const markers = getAllByTestId("map-marker");
+    expect(markers).toHaveLength(2); // w2 and w3 are stale
   });
 });

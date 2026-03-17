@@ -3,13 +3,8 @@ import { describe, it, expect } from "vitest";
 import { env } from "../env";
 
 describe("env", () => {
-  it("validates VITE_GOOGLE_MAPS_API_KEY exists", () => {
-    expect(env.VITE_GOOGLE_MAPS_API_KEY).toBeDefined();
-    expect(typeof env.VITE_GOOGLE_MAPS_API_KEY).toBe("string");
-  });
-
-  it("validates VITE_GOOGLE_MAPS_MAP_ID exists", () => {
-    expect(env.VITE_GOOGLE_MAPS_MAP_ID).toBeDefined();
-    expect(typeof env.VITE_GOOGLE_MAPS_MAP_ID).toBe("string");
+  it("validates VITE_MAPBOX_ACCESS_TOKEN exists", () => {
+    expect(env.VITE_MAPBOX_ACCESS_TOKEN).toBeDefined();
+    expect(typeof env.VITE_MAPBOX_ACCESS_TOKEN).toBe("string");
   });
 });

@@ -40,8 +40,7 @@ export default defineConfig({
     env: {
       VITE_API_URL: "http://localhost:3000",
       VITE_APP_ENV: "development",
-      VITE_GOOGLE_MAPS_API_KEY: "test_google_maps_api_key",
-      VITE_GOOGLE_MAPS_MAP_ID: "test_google_maps_map_id",
+      VITE_MAPBOX_ACCESS_TOKEN: "test_mapbox_token",
     },
   },
   resolve: {
