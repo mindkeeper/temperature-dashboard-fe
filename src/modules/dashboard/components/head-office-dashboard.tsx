@@ -61,84 +61,84 @@ export function HeadOfficeDashboard() {
         : "danger";
 
   return (
-    <div className="h-[calc(100vh-57px)] p-4">
+    <div className="flex h-[calc(100vh-57px)] flex-col gap-4 p-4">
+      {/* KPI Cards Row - Full Width */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <KpiCard
+          title="Active Devices"
+          icon={Radio}
+          primaryMetric={`${String(metrics.activeDevices.total)} devices`}
+          secondaryDetail={`${String(metrics.activeDevices.online)} online • ${String(metrics.activeDevices.offline)} offline`}
+          variant="default"
+          onClick={() => {
+            toggleFilter("offlineDevices");
+          }}
+          isActive={activeFilter === "offlineDevices"}
+          activeLabel="Viewing offline devices"
+        />
+
+        <KpiCard
+          title="Warehouses at Risk"
+          icon={AlertTriangle}
+          primaryMetric={
+            metrics.atRisk.total === 0
+              ? "All clear"
+              : `${String(metrics.atRisk.total)} warehouse${metrics.atRisk.total !== 1 ? "s" : ""}`
+          }
+          secondaryDetail={
+            metrics.atRisk.total === 0
+              ? "No temperature issues"
+              : `${String(metrics.atRisk.critical)} critical • ${String(metrics.atRisk.warning)} warning`
+          }
+          variant={atRiskVariant}
+          onClick={() => {
+            toggleFilter("atRisk");
+          }}
+          isActive={activeFilter === "atRisk"}
+          activeLabel="Viewing at-risk warehouses"
+        />
+
+        <KpiCard
+          title="Data Freshness"
+          icon={Clock}
+          primaryMetric={
+            metrics.dataFreshness.staleCount === 0
+              ? "All fresh"
+              : `${String(metrics.dataFreshness.staleCount)} warehouse${metrics.dataFreshness.staleCount !== 1 ? "s" : ""}`
+          }
+          secondaryDetail={
+            metrics.dataFreshness.staleCount === 0 ? "All data current" : "No updates for 15+ min"
+          }
+          variant={freshnessVariant}
+          onClick={() => {
+            toggleFilter("staleData");
+          }}
+          isActive={activeFilter === "staleData"}
+          activeLabel="Viewing stale warehouses"
+        />
+
+        <KpiCard
+          title="Average System Temp"
+          icon={Thermometer}
+          primaryMetric={
+            metrics.averageTemp.value === null ? "—" : `${metrics.averageTemp.value.toFixed(1)}°C`
+          }
+          secondaryDetail={`Across ${metrics.averageTemp.sensorCount.toString()} sensor${metrics.averageTemp.sensorCount !== 1 ? "s" : ""}`}
+          variant={
+            metrics.averageTemp.status === "green"
+              ? "success"
+              : metrics.averageTemp.status === "orange"
+                ? "warning"
+                : metrics.averageTemp.status === "red"
+                  ? "danger"
+                  : "default"
+          }
+        />
+      </div>
+
       {/* 2x2 Grid Layout */}
-      <div className="grid h-full grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2">
-        {/* Row 1, Col 1 - KPI Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <KpiCard
-            title="Active Devices"
-            icon={Radio}
-            primaryMetric={`${String(metrics.activeDevices.total)} devices`}
-            secondaryDetail={`${String(metrics.activeDevices.online)} online • ${String(metrics.activeDevices.offline)} offline`}
-            variant="default"
-            onClick={() => {
-              toggleFilter("offlineDevices");
-            }}
-            isActive={activeFilter === "offlineDevices"}
-            activeLabel="Viewing offline devices"
-          />
-
-          <KpiCard
-            title="Warehouses at Risk"
-            icon={AlertTriangle}
-            primaryMetric={
-              metrics.atRisk.total === 0
-                ? "All clear"
-                : `${String(metrics.atRisk.total)} warehouse${metrics.atRisk.total !== 1 ? "s" : ""}`
-            }
-            secondaryDetail={
-              metrics.atRisk.total === 0
-                ? "No temperature issues"
-                : `${String(metrics.atRisk.critical)} critical • ${String(metrics.atRisk.warning)} warning`
-            }
-            variant={atRiskVariant}
-            onClick={() => {
-              toggleFilter("atRisk");
-            }}
-            isActive={activeFilter === "atRisk"}
-            activeLabel="Viewing at-risk warehouses"
-          />
-
-          <KpiCard
-            title="Data Freshness"
-            icon={Clock}
-            primaryMetric={
-              metrics.dataFreshness.staleCount === 0
-                ? "All fresh"
-                : `${String(metrics.dataFreshness.staleCount)} warehouse${metrics.dataFreshness.staleCount !== 1 ? "s" : ""}`
-            }
-            secondaryDetail={
-              metrics.dataFreshness.staleCount === 0 ? "All data current" : "No updates for 15+ min"
-            }
-            variant={freshnessVariant}
-            onClick={() => {
-              toggleFilter("staleData");
-            }}
-            isActive={activeFilter === "staleData"}
-            activeLabel="Viewing stale warehouses"
-          />
-
-          <KpiCard
-            title="Average System Temp"
-            icon={Thermometer}
-            primaryMetric={
-              metrics.averageTemp.value === null ? "—" : `${metrics.averageTemp.value.toFixed(1)}°C`
-            }
-            secondaryDetail={`Across ${metrics.averageTemp.sensorCount.toString()} sensor${metrics.averageTemp.sensorCount !== 1 ? "s" : ""}`}
-            variant={
-              metrics.averageTemp.status === "green"
-                ? "success"
-                : metrics.averageTemp.status === "orange"
-                  ? "warning"
-                  : metrics.averageTemp.status === "red"
-                    ? "danger"
-                    : "default"
-            }
-          />
-        </div>
-
-        {/* Row 1, Col 2 - Warehouse Map */}
+      <div className="grid flex-1 grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2">
+        {/* Warehouse Map */}
         <Card className="flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
             <div>
@@ -158,7 +158,13 @@ export function HeadOfficeDashboard() {
           </CardContent>
         </Card>
 
-        {/* Row 2 - Empty for now */}
+        {/* Coming Soon Cards */}
+        <Card className="flex flex-col">
+          <CardContent className="flex flex-1 items-center justify-center p-6">
+            <p className="text-muted-foreground text-lg font-medium">Coming Soon</p>
+          </CardContent>
+        </Card>
+
         <Card className="flex flex-col">
           <CardContent className="flex flex-1 items-center justify-center p-6">
             <p className="text-muted-foreground text-lg font-medium">Coming Soon</p>
