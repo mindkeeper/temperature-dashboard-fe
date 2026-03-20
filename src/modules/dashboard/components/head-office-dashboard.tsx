@@ -1,5 +1,5 @@
 import { AlertTriangle, Clock, Radio, Thermometer } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -15,6 +15,18 @@ type FilterType = "offlineDevices" | "atRisk" | "staleData" | null;
 
 export function HeadOfficeDashboard() {
   const [activeFilter, setActiveFilter] = useState<FilterType>(null);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  // Update current time every 30 seconds for freshness checks
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 30000); // Update every 30 seconds
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
 
   // Fetch all concessionaires with warehouses
   const { data: concessionairesData, isLoading, error } = useAllConcessionaires({ limit: 100 });
@@ -24,10 +36,14 @@ export function HeadOfficeDashboard() {
   const { data: temperatureMap = {} } = useTemperature();
 
   // Aggregate warehouse-level temperatures
-  const warehouseTemperatures = useWarehouseTemperatures(concessionaires, temperatureMap);
+  const warehouseTemperatures = useWarehouseTemperatures(
+    concessionaires,
+    temperatureMap,
+    currentTime
+  );
 
-  // Calculate KPI metrics
-  const metrics = useKpiMetrics(warehouseTemperatures);
+  // Calculate KPI metrics (pass current time for freshness check)
+  const metrics = useKpiMetrics(warehouseTemperatures, currentTime);
 
   const toggleFilter = (filter: FilterType) => {
     setActiveFilter((current) => (current === filter ? null : filter));
@@ -88,7 +104,9 @@ export function HeadOfficeDashboard() {
           secondaryDetail={
             metrics.atRisk.total === 0
               ? "No temperature issues"
-              : `${String(metrics.atRisk.critical)} critical • ${String(metrics.atRisk.warning)} warning`
+              : metrics.atRisk.offlineAtRisk > 0
+                ? `${String(metrics.atRisk.critical)} critical • ${String(metrics.atRisk.warning)} warning • ${String(metrics.atRisk.offlineAtRisk)} offline`
+                : `${String(metrics.atRisk.critical)} critical • ${String(metrics.atRisk.warning)} warning`
           }
           variant={atRiskVariant}
           onClick={() => {
@@ -107,7 +125,7 @@ export function HeadOfficeDashboard() {
               : `${String(metrics.dataFreshness.staleCount)} warehouse${metrics.dataFreshness.staleCount !== 1 ? "s" : ""}`
           }
           secondaryDetail={
-            metrics.dataFreshness.staleCount === 0 ? "All data current" : "No updates for 15+ min"
+            metrics.dataFreshness.staleCount === 0 ? "All data current" : "No updates for 10+ sec"
           }
           variant={freshnessVariant}
           onClick={() => {

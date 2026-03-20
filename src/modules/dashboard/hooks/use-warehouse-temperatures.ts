@@ -19,12 +19,15 @@ export interface WarehouseTemperatureAggregate {
   longitude: number;
   concessionaireName: string;
   averageTemperature: number | null;
+  lastKnownAverageTemperature: number | null;
   unit: string;
   deviceCount: number;
   reportingDeviceCount: number;
   lastUpdate: number | null;
   status: "green" | "orange" | "red" | "gray";
 }
+
+const ONLINE_THRESHOLD_MS = 10 * 1000; // 10 seconds
 
 const getTemperatureStatus = (temp: number): "green" | "orange" | "red" => {
   if (temp <= -20) return "green";
@@ -36,13 +39,17 @@ const getTemperatureStatus = (temp: number): "green" | "orange" | "red" => {
  * Aggregates device-level temperature data into warehouse-level metrics
  * @param concessionaires - List of concessionaires with warehouses
  * @param temperatureMap - Real-time temperature data keyed by device serial number
+ * @param currentTime - Current timestamp in ms (for freshness check); defaults to Date.now()
  * @returns Array of warehouse temperature aggregates
  */
 export const useWarehouseTemperatures = (
   concessionaires: Concessionaire[],
-  temperatureMap: TemperatureMap
+  temperatureMap: TemperatureMap,
+  currentTime?: number
 ): WarehouseTemperatureAggregate[] => {
   return useMemo(() => {
+    // eslint-disable-next-line react-hooks/purity
+    const now = currentTime ?? Date.now();
     const aggregates: WarehouseTemperatureAggregate[] = [];
 
     for (const concessionaire of concessionaires) {
@@ -50,20 +57,32 @@ export const useWarehouseTemperatures = (
         // Filter active devices only
         const activeDevices = warehouse.devices.filter((device) => device.isActive);
 
-        // Get temperature readings for active devices
+        // Get temperature readings for active devices that reported within the threshold
         const deviceReadings = activeDevices
           .map((device) => temperatureMap[device.serialNumber])
-          .filter((reading): reading is TemperatureData => reading !== undefined);
+          .filter(
+            (reading): reading is TemperatureData =>
+              reading !== undefined && now - reading.ts <= ONLINE_THRESHOLD_MS
+          );
 
-        // Calculate average temperature
+        // Calculate average temperature from fresh readings only
         const averageTemperature =
           deviceReadings.length > 0
             ? deviceReadings.reduce((sum, reading) => sum + reading.temp, 0) / deviceReadings.length
             : null;
 
-        // Find most recent timestamp
+        // Calculate last known average from all readings (including stale) for offline display
+        const allDeviceReadings = activeDevices
+          .map((device) => temperatureMap[device.serialNumber])
+          .filter((reading): reading is TemperatureData => reading !== undefined);
+        const lastKnownAverageTemperature =
+          allDeviceReadings.length > 0
+            ? allDeviceReadings.reduce((sum, r) => sum + r.temp, 0) / allDeviceReadings.length
+            : null;
+
+        // Find most recent timestamp across all readings (including stale)
         const lastUpdate =
-          deviceReadings.length > 0 ? Math.max(...deviceReadings.map((r) => r.ts)) : null;
+          allDeviceReadings.length > 0 ? Math.max(...allDeviceReadings.map((r) => r.ts)) : null;
 
         // Determine status
         const status =
@@ -80,6 +99,7 @@ export const useWarehouseTemperatures = (
           longitude: warehouse.longitude,
           concessionaireName: concessionaire.name,
           averageTemperature,
+          lastKnownAverageTemperature,
           unit,
           deviceCount: activeDevices.length,
           reportingDeviceCount: deviceReadings.length,
@@ -90,5 +110,5 @@ export const useWarehouseTemperatures = (
     }
 
     return aggregates;
-  }, [concessionaires, temperatureMap]);
+  }, [concessionaires, temperatureMap, currentTime]);
 };

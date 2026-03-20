@@ -26,6 +26,7 @@ const mockWarehouses: WarehouseTemperatureAggregate[] = [
     longitude: 106.8,
     concessionaireName: "Concessionaire A",
     averageTemperature: -20,
+    lastKnownAverageTemperature: -20,
     unit: "C",
     deviceCount: 10,
     reportingDeviceCount: 8,
@@ -40,6 +41,7 @@ const mockWarehouses: WarehouseTemperatureAggregate[] = [
     longitude: 106.9,
     concessionaireName: "Concessionaire B",
     averageTemperature: -15,
+    lastKnownAverageTemperature: -15,
     unit: "C",
     deviceCount: 20,
     reportingDeviceCount: 20,
@@ -54,6 +56,7 @@ const mockWarehouses: WarehouseTemperatureAggregate[] = [
     longitude: 107.0,
     concessionaireName: "Concessionaire C",
     averageTemperature: -5,
+    lastKnownAverageTemperature: -5,
     unit: "C",
     deviceCount: 15,
     reportingDeviceCount: 15,
@@ -80,6 +83,7 @@ describe("WarehouseMap - Filtering", () => {
         longitude: 106.8,
         concessionaireName: "Concessionaire A",
         averageTemperature: -20,
+        lastKnownAverageTemperature: -20,
         unit: "C",
         deviceCount: 10,
         reportingDeviceCount: 8, // 2 offline
@@ -94,6 +98,7 @@ describe("WarehouseMap - Filtering", () => {
         longitude: 106.9,
         concessionaireName: "Concessionaire B",
         averageTemperature: -15,
+        lastKnownAverageTemperature: -15,
         unit: "C",
         deviceCount: 10,
         reportingDeviceCount: 10, // 0 offline
@@ -117,6 +122,61 @@ describe("WarehouseMap - Filtering", () => {
     expect(markers).toHaveLength(2); // w2 (orange) and w3 (red)
   });
 
+  it("includes offline warehouses whose last known temp was risky in atRisk filter", () => {
+    const warehouses: WarehouseTemperatureAggregate[] = [
+      {
+        warehouseId: "w1",
+        warehouseName: "Warehouse 1",
+        address: "Address 1",
+        latitude: -6.2,
+        longitude: 106.8,
+        concessionaireName: "Concessionaire A",
+        averageTemperature: -20,
+        lastKnownAverageTemperature: -20,
+        unit: "C",
+        deviceCount: 3,
+        reportingDeviceCount: 3,
+        lastUpdate: Date.now(),
+        status: "green", // live and healthy
+      },
+      {
+        warehouseId: "w2",
+        warehouseName: "Warehouse 2",
+        address: "Address 2",
+        latitude: -6.3,
+        longitude: 106.9,
+        concessionaireName: "Concessionaire B",
+        averageTemperature: null, // all devices offline
+        lastKnownAverageTemperature: -5, // last known was red (> -11)
+        unit: "C",
+        deviceCount: 3,
+        reportingDeviceCount: 0,
+        lastUpdate: Date.now() - 30 * 1000,
+        status: "gray",
+      },
+      {
+        warehouseId: "w3",
+        warehouseName: "Warehouse 3",
+        address: "Address 3",
+        latitude: -6.4,
+        longitude: 107.0,
+        concessionaireName: "Concessionaire C",
+        averageTemperature: null, // all devices offline
+        lastKnownAverageTemperature: -25, // last known was green (safe)
+        unit: "C",
+        deviceCount: 3,
+        reportingDeviceCount: 0,
+        lastUpdate: Date.now() - 30 * 1000,
+        status: "gray",
+      },
+    ];
+
+    const { getAllByTestId } = render(<WarehouseMap warehouses={warehouses} filter="atRisk" />);
+
+    const markers = getAllByTestId("map-marker");
+    expect(markers).toHaveLength(1); // only w2: offline but last known was risky
+  });
+
   it("filters to stale warehouses when staleData filter active", () => {
     const now = Date.now();
     const warehousesWithStale: WarehouseTemperatureAggregate[] = [
@@ -128,10 +188,11 @@ describe("WarehouseMap - Filtering", () => {
         longitude: 106.8,
         concessionaireName: "Concessionaire A",
         averageTemperature: -20,
+        lastKnownAverageTemperature: -20,
         unit: "C",
         deviceCount: 10,
         reportingDeviceCount: 8,
-        lastUpdate: now - 10 * 60 * 1000, // 10 min - fresh
+        lastUpdate: now - 5 * 1000, // 5 sec - fresh
         status: "green",
       },
       {
@@ -142,10 +203,11 @@ describe("WarehouseMap - Filtering", () => {
         longitude: 106.9,
         concessionaireName: "Concessionaire B",
         averageTemperature: -15,
+        lastKnownAverageTemperature: -15,
         unit: "C",
         deviceCount: 20,
         reportingDeviceCount: 20,
-        lastUpdate: now - 20 * 60 * 1000, // 20 min - stale
+        lastUpdate: now - 15 * 1000, // 15 sec - stale
         status: "orange",
       },
       {
@@ -156,6 +218,7 @@ describe("WarehouseMap - Filtering", () => {
         longitude: 107.0,
         concessionaireName: "Concessionaire C",
         averageTemperature: -5,
+        lastKnownAverageTemperature: -5,
         unit: "C",
         deviceCount: 15,
         reportingDeviceCount: 15,

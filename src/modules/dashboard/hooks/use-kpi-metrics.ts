@@ -1,8 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 
 import type { WarehouseTemperatureAggregate } from "./use-warehouse-temperatures";
 
-const STALE_THRESHOLD_MS = 15 * 60 * 1000; // 15 minutes
+const STALE_THRESHOLD_MS = 10 * 1000; // 10 seconds
 
 interface KpiMetrics {
   activeDevices: {
@@ -14,6 +14,7 @@ interface KpiMetrics {
     total: number;
     critical: number;
     warning: number;
+    offlineAtRisk: number;
   };
   dataFreshness: {
     staleCount: number;
@@ -33,10 +34,9 @@ const getTemperatureStatus = (temp: number): "green" | "orange" | "red" => {
 
 export const useKpiMetrics = (
   warehouses: WarehouseTemperatureAggregate[],
-  currentTime?: number
+  currentTime: number
 ): KpiMetrics => {
-  const [initialTime] = useState(() => Date.now());
-  const now = currentTime ?? initialTime;
+  const now = currentTime;
 
   return useMemo(() => {
     // Active devices
@@ -45,14 +45,24 @@ export const useKpiMetrics = (
     const offlineDevices = totalDevices - onlineDevices;
 
     // Warehouses at risk
-    const atRiskWarehouses = warehouses.filter((w) => w.status === "orange" || w.status === "red");
+    const offlineAtRiskWarehouses = warehouses.filter((w) => {
+      if (w.status !== "gray" || w.lastKnownAverageTemperature === null) return false;
+      const lastStatus = getTemperatureStatus(w.lastKnownAverageTemperature);
+      return lastStatus === "orange" || lastStatus === "red";
+    });
+    const liveAtRiskWarehouses = warehouses.filter(
+      (w) => w.status === "orange" || w.status === "red"
+    );
+    const atRiskWarehouses = [...liveAtRiskWarehouses, ...offlineAtRiskWarehouses];
     const criticalCount = warehouses.filter((w) => w.status === "red").length;
     const warningCount = warehouses.filter((w) => w.status === "orange").length;
 
-    // Data freshness
-    const staleWarehouses = warehouses.filter(
-      (w) => w.lastUpdate === null || now - w.lastUpdate > STALE_THRESHOLD_MS
-    );
+    // Data freshness - check each warehouse
+    const staleWarehouses = warehouses.filter((w) => {
+      if (w.lastUpdate === null) return true;
+      const age = now - w.lastUpdate;
+      return age > STALE_THRESHOLD_MS;
+    });
 
     // Average system temperature
     const temperaturesWithData = warehouses.filter((w) => w.averageTemperature !== null);
@@ -74,6 +84,7 @@ export const useKpiMetrics = (
         total: atRiskWarehouses.length,
         critical: criticalCount,
         warning: warningCount,
+        offlineAtRisk: offlineAtRiskWarehouses.length,
       },
       dataFreshness: {
         staleCount: staleWarehouses.length,

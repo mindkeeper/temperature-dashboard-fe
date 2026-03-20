@@ -1,4 +1,4 @@
-/* Custom styles for Mapbox popup */
+/* Custom styles for warehouse map popup */
 .mapboxgl-popup-close-button {
   /* Increase size for better clickability */
   width: 24px;
@@ -30,6 +30,11 @@
   /* Text styling */
   color: #666;
   font-weight: 500;
+
+  /* Reset button styles */
+  border: none;
+  cursor: pointer;
+  padding: 0;
 }
 
 .mapboxgl-popup-close-button:hover {
@@ -43,8 +48,30 @@
   transform: scale(0.95);
 }
 
-/* Improve popup appearance without excess padding */
+/* Popup content card */
 .mapboxgl-popup-content {
-  border-radius: 8px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  background: white;
+  position: relative;
+  min-width: 200px;
+}
+
+/*
+ * Map container: clips the map tiles but allows the custom popup
+ * (rendered as a sibling of <Map>) to overflow.
+ */
+.warehouse-map-container {
+  overflow: visible;
+}
+
+/* The popup tip / arrow pointing down toward the marker */
+.warehouse-map-popup-tip {
+  width: 0;
+  height: 0;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 8px solid white;
+  margin: 0 auto;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.1));
 }

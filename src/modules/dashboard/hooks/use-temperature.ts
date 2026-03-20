@@ -51,11 +51,29 @@ export const useTemperature = () => {
 
     // Listen for temperature updates from MQTT
     socket.on("temperature-update", (data: TemperatureData) => {
-      // Update the temperature map in the query cache
+      // Normalize timestamp - convert seconds to milliseconds if needed
+      // If timestamp is in seconds (< year 2100 in seconds = 4102444800), convert to ms
+      const normalizedTs = data.ts < 4102444800 ? data.ts * 1000 : data.ts;
+
+      // Debug logging
+      if (import.meta.env.DEV) {
+        // eslint-disable-next-line no-console
+        console.log("[Temperature Update]", {
+          sn: data.sn,
+          temp: data.temp,
+          originalTs: data.ts,
+          normalizedTs,
+          tsDate: new Date(normalizedTs).toISOString(),
+          now: Date.now(),
+          nowDate: new Date(Date.now()).toISOString(),
+        });
+      }
+
+      // Update the temperature map in the query cache with normalized timestamp
       // Each device serial number stores only its latest reading (replaces previous)
       queryClient.setQueryData<TemperatureMap>(temperatureKeys.all, (oldData = {}) => ({
         ...oldData,
-        [data.sn]: data,
+        [data.sn]: { ...data, ts: normalizedTs },
       }));
     });
 
