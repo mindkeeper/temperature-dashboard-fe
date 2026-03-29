@@ -9,6 +9,7 @@ import { useTemperature } from "../hooks/use-temperature";
 import { useWarehouseTemperatures } from "../hooks/use-warehouse-temperatures";
 
 import { KpiCard } from "./kpi-card";
+import { TemperatureTimeseriesCard } from "./temperature-timeseries-card";
 import { WarehouseMap } from "./warehouse-map";
 
 type FilterType = "offlineDevices" | "atRisk" | "staleData" | null;
@@ -77,7 +78,7 @@ export function HeadOfficeDashboard() {
         : "danger";
 
   return (
-    <div className="flex h-[calc(100vh-57px)] flex-col gap-4 p-4">
+    <div className="flex h-[calc(100vh-57px)] flex-col gap-4 overflow-auto p-4">
       {/* KPI Cards Row - Full Width */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
@@ -154,8 +155,8 @@ export function HeadOfficeDashboard() {
         />
       </div>
 
-      {/* 2x2 Grid Layout */}
-      <div className="grid flex-1 grid-cols-1 grid-rows-2 gap-4 md:grid-cols-2">
+      {/* Row 1: Map + Coming Soon */}
+      <div className="grid h-96 shrink-0 grid-cols-1 gap-4 md:grid-cols-2">
         {/* Warehouse Map */}
         <Card className="flex flex-col">
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
@@ -176,13 +177,18 @@ export function HeadOfficeDashboard() {
           </CardContent>
         </Card>
 
-        {/* Coming Soon Cards */}
         <Card className="flex flex-col">
           <CardContent className="flex flex-1 items-center justify-center p-6">
             <p className="text-muted-foreground text-lg font-medium">Coming Soon</p>
           </CardContent>
         </Card>
+      </div>
 
+      {/* Row 2: Temperature Timeseries */}
+      <TemperatureTimeseriesCard />
+
+      {/* Row 3: Coming Soon Cards */}
+      <div className="grid h-96 shrink-0 grid-cols-1 gap-4 md:grid-cols-2">
         <Card className="flex flex-col">
           <CardContent className="flex flex-1 items-center justify-center p-6">
             <p className="text-muted-foreground text-lg font-medium">Coming Soon</p>

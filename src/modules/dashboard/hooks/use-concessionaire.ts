@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 
 import { concessionaireService, type GetAllConcessionairesParams } from "@/services/concessionaire";
 
@@ -21,5 +21,22 @@ export const useConcessionaire = (id: string) => {
     queryKey: concessionarieKeys.details(id),
     queryFn: () => concessionaireService.getConcessionaireById(id),
     enabled: !!id,
+  });
+};
+
+export const useConcessionaireInfinite = (search: string) => {
+  return useInfiniteQuery({
+    queryKey: [...concessionarieKeys.all, "infinite", search] as const,
+    queryFn: ({ pageParam }) =>
+      concessionaireService.getAllConcessionaires({
+        q: search || undefined,
+        page: pageParam,
+        limit: 10,
+      }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      const { page, totalPages } = lastPage.meta.pagination;
+      return page < totalPages ? page + 1 : undefined;
+    },
   });
 };

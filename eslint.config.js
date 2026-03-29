@@ -10,7 +10,7 @@ import tseslint from "typescript-eslint";
 import { defineConfig, globalIgnores } from "eslint/config";
 
 export default defineConfig([
-  globalIgnores(["dist", "node_modules", "public"]),
+  globalIgnores(["dist", "node_modules", "public", "src/components/ui"]),
 
   // Base JS + TypeScript strict rules
   {

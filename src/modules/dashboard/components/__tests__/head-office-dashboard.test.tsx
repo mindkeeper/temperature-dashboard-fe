@@ -19,6 +19,13 @@ vi.mock("../warehouse-map", () => ({
   ),
 }));
 
+// Mock TemperatureTimeseriesCard component
+vi.mock("../temperature-timeseries-card", () => ({
+  TemperatureTimeseriesCard: () => (
+    <div data-testid="temperature-timeseries-card">Temperature Timeseries</div>
+  ),
+}));
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
