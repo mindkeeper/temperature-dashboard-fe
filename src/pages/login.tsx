@@ -9,12 +9,12 @@ export default function LoginPage() {
           <img src="/brand-logo.svg" alt="ADW" className="h-16 w-auto" />
         </div>
         <div className="relative z-10 mt-20 mb-12 lg:mt-auto">
-          <blockquote className="max-w-lg space-y-4">
+          {/* <blockquote className="max-w-lg space-y-4">
             <p className="text-2xl leading-relaxed font-medium text-white/95">
               &ldquo;Do more, step up your capabilities, get more.&rdquo;
             </p>
             <footer className="text-sm font-medium text-white/80">Sonny Sumarsono, PMP</footer>
-          </blockquote>
+          </blockquote> */}
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { RootLayout } from "@/components/layout/root-layout";
 import { AuthGuard, ProtectedRoute } from "@/modules/auth";
 import DashboardPage from "@/pages/dashboard";
+import DeviceConfigPage from "@/pages/device-config";
 import IndexPage from "@/pages/index";
 import LiveDataPage from "@/pages/live-data";
 import LoginPage from "@/pages/login";
@@ -37,6 +38,14 @@ export function AppRouter() {
             element={
               <ProtectedRoute>
                 <LiveDataPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="device-config"
+            element={
+              <ProtectedRoute requiredRole="SUPERADMIN">
+                <DeviceConfigPage />
               </ProtectedRoute>
             }
           />

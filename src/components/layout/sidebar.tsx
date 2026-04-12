@@ -5,6 +5,7 @@ import {
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
+  Radio,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
@@ -15,6 +16,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/modules/auth";
+import type { AuthUser } from "@/modules/auth";
 import { useUIStore } from "@/store/ui-store";
 
 function getInitials(name: string): string {
@@ -37,6 +39,12 @@ const menuItems = [
     icon: Activity,
     path: "/live-data",
   },
+  {
+    label: "Device Config",
+    icon: Radio,
+    path: "/device-config",
+    roles: ["SUPERADMIN"] as AuthUser["role"][],
+  },
 ];
 
 interface SidebarContentProps {
@@ -52,6 +60,10 @@ function SidebarContent({ onNavigate }: SidebarContentProps) {
     onNavigate?.();
   };
 
+  const visibleMenuItems = menuItems.filter(
+    (item) => !item.roles || (user?.role && item.roles.includes(user.role))
+  );
+
   return (
     <div className="flex h-full flex-col">
       {/* Logo */}
@@ -63,7 +75,7 @@ function SidebarContent({ onNavigate }: SidebarContentProps) {
 
       {/* Navigation Menu */}
       <nav className="flex-1 space-y-1 p-4">
-        {menuItems.map((item) => {
+        {visibleMenuItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
 

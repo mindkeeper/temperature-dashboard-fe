@@ -124,6 +124,14 @@ export default defineConfig([
     },
   },
 
+  // Relaxed rules for react-hook-form field arrays - commonly use index in template literals
+  {
+    files: ["src/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/restrict-template-expressions": "off",
+    },
+  },
+
   // Config files (JS, CJS, MJS) - no TypeScript type-checking
   {
     files: ["**/*.{js,mjs,cjs}"],

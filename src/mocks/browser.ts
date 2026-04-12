@@ -12,6 +12,6 @@ export const worker = setupWorker(...handlers);
 
 // Log handlers count for debugging
 if (import.meta.env.DEV) {
-  // eslint-disable-next-line @typescript-eslint/restrict-template-expressions, no-console
+  // eslint-disable-next-line no-console
   console.log(`[MSW] Registered ${handlers.length} request handler(s)`);
 }
