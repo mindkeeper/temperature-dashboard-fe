@@ -4,7 +4,9 @@ import type {
   ConfigureSensorPayload,
   ConfigureJobResponse,
   CreateDevicePayload,
+  CreateGatewayPayload,
   DeviceListResponse,
+  GatewayResponse,
   GetDevicesParams,
   JobStatusResponse,
 } from "../types/device-config.types";
@@ -28,8 +30,17 @@ export const deviceConfigService = {
     return response.data;
   },
 
+  async createGateway(data: CreateGatewayPayload): Promise<GatewayResponse> {
+    const response = await apiClient.post<GatewayResponse>("/devices/gateways", data);
+    return response.data;
+  },
+
   async createDevice(data: CreateDevicePayload): Promise<void> {
     await apiClient.post("/devices", data);
+  },
+
+  async connectGateway(id: string): Promise<void> {
+    await apiClient.put(`/devices/${id}/connect`);
   },
 
   async getJobStatus(jobId: string): Promise<JobStatusResponse> {

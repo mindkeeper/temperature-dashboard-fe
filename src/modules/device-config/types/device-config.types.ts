@@ -3,6 +3,8 @@ import { z } from "zod";
 // ─── Device Types ──────────────────────────────────────────────────────────────
 
 export type ProvisionStatus = "PENDING" | "READY_FOR_PROVISIONING" | "PROVISIONED";
+export type SyncStatus = "PENDING" | "SYNCED" | "ERROR";
+export type GatewayProvisionStatus = "PENDING" | "READY" | "PROVISIONED";
 
 export interface DeviceListItem {
   id: string;
@@ -10,6 +12,7 @@ export interface DeviceListItem {
   modelname: string | null;
   isActive: boolean;
   provisionStatus: ProvisionStatus;
+  syncStatus: SyncStatus;
   installedAt: string;
   deactivatedAt: string | null;
   warehouse: {
@@ -20,6 +23,12 @@ export interface DeviceListItem {
       slug: string;
     };
   };
+  gateway: {
+    id: string;
+    imei: string;
+    provisionStatus: GatewayProvisionStatus;
+    warehouseId: string;
+  } | null;
 }
 
 export interface DeviceListResponse {
@@ -98,6 +107,17 @@ export interface ConfigureSensorPayload {
 }
 
 // ─── Create Device Types ───────────────────────────────────────────────────────
+export interface CreateGatewayPayload {
+  imei: string;
+  warehouseId: string;
+}
+
+export interface GatewayResponse {
+  id: string;
+  imei: string;
+  provisionStatus: GatewayProvisionStatus;
+  warehouseId: string;
+}
 
 export interface CreateDevicePayload {
   serialNumber: string;
@@ -105,4 +125,5 @@ export interface CreateDevicePayload {
   specifications?: Record<string, unknown>;
   installedAt: string;
   warehouseId: string;
+  gatewayId: string;
 }

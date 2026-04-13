@@ -33,11 +33,13 @@ const menuItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
+    roles: ["CONCESSIONAIRE", "HEADOFFICE"] as AuthUser["role"][],
   },
   {
     label: "Live Data",
     icon: Activity,
     path: "/live-data",
+    roles: ["CONCESSIONAIRE", "HEADOFFICE"] as AuthUser["role"][],
   },
   {
     label: "Device Config",
@@ -60,9 +62,7 @@ function SidebarContent({ onNavigate }: SidebarContentProps) {
     onNavigate?.();
   };
 
-  const visibleMenuItems = menuItems.filter(
-    (item) => !item.roles || (user?.role && item.roles.includes(user.role))
-  );
+  const visibleMenuItems = menuItems.filter((item) => user && item.roles.includes(user.role));
 
   return (
     <div className="flex h-full flex-col">
