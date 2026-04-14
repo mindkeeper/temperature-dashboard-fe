@@ -44,7 +44,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { ConcessionaireSelect } from "@/modules/dashboard/components/concessionaire-select";
+import { ConcessionaireCombobox } from "@/modules/dashboard/components/concessionaire-combobox";
 import { useConcessionaire } from "@/modules/dashboard/hooks/use-concessionaire";
 import type { Warehouse } from "@/services/concessionaire";
 
@@ -168,12 +168,15 @@ export function AddDeviceModal() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add New Device
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add New Device
+          </Button>
+        }
+      />
+
       <DialogContent className="flex max-h-[90vh] flex-col overflow-hidden p-0 sm:max-w-[500px]">
         <DialogHeader className="p-6 pb-2">
           <DialogTitle>
@@ -204,7 +207,7 @@ export function AddDeviceModal() {
               className="flex flex-col overflow-hidden"
             >
               <ScrollArea className="px-6">
-                <div className="space-y-4 py-4 pr-3">
+                <div className="space-y-4 px-1 py-4 pr-3">
                   <FormField
                     control={gatewayForm.control}
                     name="imei"
@@ -226,12 +229,13 @@ export function AddDeviceModal() {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Concessionaire</FormLabel>
-                          <ConcessionaireSelect
+                          <ConcessionaireCombobox
                             value={field.value}
                             onValueChange={(id) => {
-                              field.onChange(id);
+                              field.onChange(id ?? "");
                               gatewayForm.setValue("warehouseId", "");
                             }}
+                            className="w-full"
                           />
                           <FormMessage />
                         </FormItem>
@@ -299,7 +303,7 @@ export function AddDeviceModal() {
               className="flex flex-col overflow-hidden"
             >
               <ScrollArea className="px-6">
-                <div className="space-y-4 py-4 pr-3">
+                <div className="space-y-4 px-1 py-4 pr-3">
                   <div className="flex items-center gap-3 rounded-lg border border-emerald-100 bg-emerald-50 p-3">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
                     <div>

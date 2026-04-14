@@ -109,19 +109,22 @@ export function AddSensorModal({ gatewayId, gatewayImei, warehouseId }: AddSenso
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="h-8 gap-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
-          onClick={(e) => {
-            e.stopPropagation();
-          }}
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Add Sensor
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button
+            size="sm"
+            variant="ghost"
+            className="h-8 gap-1.5 text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Add Sensor
+          </Button>
+        }
+      />
+
       <DialogContent
         className="flex max-h-[90vh] flex-col overflow-hidden p-0 sm:max-w-[500px]"
         onClick={(e) => {

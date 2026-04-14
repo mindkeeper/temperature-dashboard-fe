@@ -1,11 +1,13 @@
 import {
   Activity,
+  Building2,
   LayoutDashboard,
   LogOut,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
   Radio,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation } from "react-router";
@@ -45,6 +47,18 @@ const menuItems = [
     label: "Device Config",
     icon: Radio,
     path: "/device-config",
+    roles: ["SUPERADMIN"] as AuthUser["role"][],
+  },
+  {
+    label: "User Management",
+    icon: Users,
+    path: "/users",
+    roles: ["SUPERADMIN"] as AuthUser["role"][],
+  },
+  {
+    label: "Concessionaires",
+    icon: Building2,
+    path: "/concessionaires",
     roles: ["SUPERADMIN"] as AuthUser["role"][],
   },
 ];

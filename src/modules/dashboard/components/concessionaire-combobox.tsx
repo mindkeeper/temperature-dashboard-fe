@@ -15,9 +15,14 @@ import { useConcessionaireInfinite } from "../hooks/use-concessionaire";
 interface ConcessionaireComboboxProps {
   value: string | null;
   onValueChange: (id: string | null, name: string | null) => void;
+  className?: string;
 }
 
-export function ConcessionaireCombobox({ value, onValueChange }: ConcessionaireComboboxProps) {
+export function ConcessionaireCombobox({
+  value,
+  onValueChange,
+  className,
+}: ConcessionaireComboboxProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const [debouncedSearch, setDebouncedSearch] = useDebounceValue("", 300);
 
@@ -54,7 +59,7 @@ export function ConcessionaireCombobox({ value, onValueChange }: ConcessionaireC
       filteredItems={concessionaires.map((c) => c.name)}
     >
       <ComboboxInput
-        className="w-60"
+        className={className ?? "w-60"}
         placeholder="Select concessionaire"
         showClear={!!value}
         onInput={(e) => setDebouncedSearch(e.currentTarget.value)}
