@@ -4,17 +4,21 @@ import { describe, it, expect, vi } from "vitest";
 import type { WarehouseTemperatureAggregate } from "../../hooks/use-warehouse-temperatures";
 import { WarehouseMap } from "../warehouse-map";
 
-// Mock Mapbox
-vi.mock("react-map-gl/mapbox", () => ({
-  default: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="mapbox-map">{children}</div>
+// Mock react-leaflet
+vi.mock("react-leaflet", () => ({
+  MapContainer: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="leaflet-map">{children}</div>
   ),
-  Marker: ({ children }: { children: React.ReactNode }) => (
+  TileLayer: () => null,
+  CircleMarker: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="map-marker">{children}</div>
   ),
-  Popup: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="map-popup">{children}</div>
-  ),
+  useMap: () => ({
+    fitBounds: vi.fn(),
+    latLngToContainerPoint: vi.fn(() => ({ x: 100, y: 100 })),
+    getContainer: vi.fn(() => ({ clientWidth: 800, clientHeight: 600 })),
+  }),
+  useMapEvents: vi.fn(),
 }));
 
 const mockWarehouses: WarehouseTemperatureAggregate[] = [

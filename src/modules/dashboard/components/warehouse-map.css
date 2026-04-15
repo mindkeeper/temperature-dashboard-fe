@@ -1,60 +1,65 @@
-/* Custom styles for warehouse map popup */
+/* Popup content card */
+.mapboxgl-popup-content {
+  border-radius: 12px;
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.12),
+    0 2px 8px rgba(0, 0, 0, 0.08);
+  background: white;
+  min-width: 220px;
+  overflow: hidden;
+}
+
+/* Header row: name + close button side by side */
+.warehouse-map-popup-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 0 14px;
+}
+
+.warehouse-map-popup-divider {
+  margin: 10px 14px;
+  border: none;
+  border-top: 1px solid #f0f0f0;
+}
+
+.warehouse-map-popup-body {
+  padding: 0 14px 14px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Close button — sits top-right inside the header flex row */
 .mapboxgl-popup-close-button {
-  /* Increase size for better clickability */
-  width: 24px;
-  height: 24px;
-
-  /* Position closer to edge but with minimal spacing */
-  right: 4px;
-  top: 4px;
-
-  /* Improve visual appearance */
-  font-size: 18px;
-  line-height: 24px;
-
-  /* Rounded background */
-  background: rgba(255, 255, 255, 0.9);
-  border-radius: 50%;
-
-  /* Add subtle shadow */
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-
-  /* Smooth transitions */
-  transition: all 0.2s ease;
-
-  /* Center the X */
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  font-size: 16px;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  /* Text styling */
-  color: #666;
-  font-weight: 500;
-
-  /* Reset button styles */
+  color: #9ca3af;
+  background: transparent;
   border: none;
+  border-radius: 50%;
   cursor: pointer;
   padding: 0;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+  margin-top: 1px;
 }
 
 .mapboxgl-popup-close-button:hover {
-  background: rgba(255, 255, 255, 1);
-  color: #333;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  transform: scale(1.05);
+  background: #f3f4f6;
+  color: #374151;
 }
 
 .mapboxgl-popup-close-button:active {
-  transform: scale(0.95);
-}
-
-/* Popup content card */
-.mapboxgl-popup-content {
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  background: white;
-  position: relative;
-  min-width: 200px;
+  background: #e5e7eb;
 }
 
 /*
@@ -63,6 +68,12 @@
  */
 .warehouse-map-container {
   overflow: visible;
+}
+
+/* Ensure Leaflet container fills parent */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
 }
 
 /* The popup tip / arrow pointing down toward the marker */

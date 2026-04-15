@@ -1,11 +1,9 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
-import Map, { Marker, type MapRef } from "react-map-gl/mapbox";
-
-import { env } from "@/lib/env";
+import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { MapContainer, TileLayer, CircleMarker, useMap, useMapEvents } from "react-leaflet";
 
 import type { WarehouseTemperatureAggregate } from "../hooks/use-warehouse-temperatures";
 
-import "mapbox-gl/dist/mapbox-gl.css";
+import "leaflet/dist/leaflet.css";
 import "./warehouse-map.css";
 
 interface WarehouseMapProps {
@@ -13,7 +11,7 @@ interface WarehouseMapProps {
   filter?: "offlineDevices" | "atRisk" | "staleData" | null;
 }
 
-const STALE_THRESHOLD_MS = 10 * 1000; // 10 seconds - aligned with KPI metrics
+const STALE_THRESHOLD_MS = 10 * 1000;
 
 const getTemperatureStatus = (temp: number): "green" | "orange" | "red" => {
   if (temp <= -20) return "green";
@@ -30,19 +28,14 @@ const STATUS_COLORS = {
 
 const formatTimestamp = (timestamp: number | null): string => {
   if (!timestamp) return "No data";
-
-  // Convert Unix timestamp (seconds) to milliseconds
   const timestampMs = timestamp * 1000;
   const now = Date.now();
   const diffMs = now - timestampMs;
   const diffMins = Math.floor(diffMs / 60000);
-
   if (diffMins < 1) return "Just now";
   if (diffMins < 60) return `${String(diffMins)} min${diffMins > 1 ? "s" : ""} ago`;
-
   const diffHours = Math.floor(diffMins / 60);
   if (diffHours < 24) return `${String(diffHours)} hour${diffHours > 1 ? "s" : ""} ago`;
-
   const diffDays = Math.floor(diffHours / 24);
   return `${String(diffDays)} day${diffDays > 1 ? "s" : ""} ago`;
 };
@@ -95,29 +88,109 @@ function PopupTemperatureBody({ warehouse }: { warehouse: WarehouseTemperatureAg
   );
 }
 
+// Inner component that has access to the Leaflet map instance via useMap()
+interface MapInnerProps {
+  filteredWarehouses: WarehouseTemperatureAggregate[];
+  selectedWarehouse: string | null;
+  onSelectWarehouse: (id: string | null) => void;
+  onPopupPosition: (pos: { x: number; y: number } | null) => void;
+}
+
+function MapInner({
+  filteredWarehouses,
+  selectedWarehouse,
+  onSelectWarehouse,
+  onPopupPosition,
+}: MapInnerProps) {
+  const map = useMap();
+  const markerClickedRef = useRef(false);
+
+  // Recompute popup screen position on map move/zoom
+  const updatePopupPosition = useCallback(() => {
+    if (!selectedWarehouse) {
+      onPopupPosition(null);
+      return;
+    }
+    const warehouse = filteredWarehouses.find((w) => w.warehouseId === selectedWarehouse);
+    if (!warehouse) {
+      onPopupPosition(null);
+      return;
+    }
+    const containerPoint = map.latLngToContainerPoint([warehouse.latitude, warehouse.longitude]);
+    const container = map.getContainer();
+    const { clientWidth, clientHeight } = container;
+    if (
+      containerPoint.x < 0 ||
+      containerPoint.x > clientWidth ||
+      containerPoint.y < 0 ||
+      containerPoint.y > clientHeight
+    ) {
+      onPopupPosition(null);
+      return;
+    }
+    onPopupPosition({ x: containerPoint.x, y: containerPoint.y });
+  }, [selectedWarehouse, filteredWarehouses, map, onPopupPosition]);
+
+  // Also compute on initial render and when selection changes
+  useEffect(() => {
+    updatePopupPosition();
+  }, [updatePopupPosition]);
+
+  useMapEvents({
+    move: updatePopupPosition,
+    zoom: updatePopupPosition,
+    click: () => {
+      if (markerClickedRef.current) {
+        markerClickedRef.current = false;
+        return;
+      }
+      onSelectWarehouse(null);
+    },
+  });
+
+  return (
+    <>
+      {filteredWarehouses.map((warehouse) => (
+        <CircleMarker
+          key={warehouse.warehouseId}
+          center={[warehouse.latitude, warehouse.longitude]}
+          radius={12}
+          pathOptions={{
+            fillColor: STATUS_COLORS[warehouse.status],
+            fillOpacity: 1,
+            color: "white",
+            weight: 2,
+          }}
+          eventHandlers={{
+            click: (e) => {
+              e.originalEvent.stopPropagation();
+              markerClickedRef.current = true;
+              onSelectWarehouse(warehouse.warehouseId);
+            },
+          }}
+        />
+      ))}
+    </>
+  );
+}
+
 export function WarehouseMap({ warehouses, filter = null }: WarehouseMapProps) {
   const [selectedWarehouse, setSelectedWarehouse] = useState<string | null>(null);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
-  const [mapMoveCount, setMapMoveCount] = useState(0);
-  const mapRef = useRef<MapRef>(null);
+  const [popupPosition, setPopupPosition] = useState<{ x: number; y: number } | null>(null);
 
-  // Update current time periodically to keep staleness check accurate
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentTime(Date.now());
-    }, 1000); // Update every second for accurate staleness detection
-
+    }, 1000);
     return () => {
       clearInterval(interval);
     };
   }, []);
 
-  // Filter warehouses based on active filter
   const filteredWarehouses = useMemo(() => {
     if (!filter) return warehouses;
-
     const now = currentTime;
-
     switch (filter) {
       case "offlineDevices":
         return warehouses.filter((w) => w.deviceCount > w.reportingDeviceCount);
@@ -139,91 +212,14 @@ export function WarehouseMap({ warehouses, filter = null }: WarehouseMapProps) {
     }
   }, [warehouses, filter, currentTime]);
 
-  // Calculate center and initial viewport
-  const initialViewState = useMemo(() => {
-    if (filteredWarehouses.length === 0) {
-      // Center of Indonesia with zoom to see entire country
-      return {
-        latitude: -2.5,
-        longitude: 118.0,
-        zoom: 0,
-      };
-    }
-
-    const bounds = {
-      north: Math.max(...filteredWarehouses.map((w) => w.latitude)),
-      south: Math.min(...filteredWarehouses.map((w) => w.latitude)),
-      east: Math.max(...filteredWarehouses.map((w) => w.longitude)),
-      west: Math.min(...filteredWarehouses.map((w) => w.longitude)),
-    };
-
-    const centerLat = (bounds.north + bounds.south) / 2;
-    const centerLng = (bounds.east + bounds.west) / 2;
-
-    return {
-      latitude: centerLat,
-      longitude: centerLng,
-      zoom: 4,
-    };
-  }, [filteredWarehouses]);
-
-  // Auto-fit bounds when warehouses change
-  useEffect(() => {
-    if (mapRef.current && filteredWarehouses.length > 1) {
-      const bounds: [number, number, number, number] = [
-        Math.min(...filteredWarehouses.map((w) => w.longitude)), // west
-        Math.min(...filteredWarehouses.map((w) => w.latitude)), // south
-        Math.max(...filteredWarehouses.map((w) => w.longitude)), // east
-        Math.max(...filteredWarehouses.map((w) => w.latitude)), // north
-      ];
-
-      mapRef.current.fitBounds(bounds, {
-        padding: 50,
-        duration: 1000,
-      });
-    }
-  }, [filteredWarehouses]);
+  const center = useMemo((): [number, number] => {
+    return [-2.5489, 118.0149];
+  }, []);
 
   const selectedWarehouseData = useMemo(
     () => filteredWarehouses.find((w) => w.warehouseId === selectedWarehouse),
     [filteredWarehouses, selectedWarehouse]
   );
-
-  // Compute popup screen position from lat/lng using the map's project() method.
-  // Re-computed whenever the selected warehouse or map viewport changes (via mapMoveCount).
-  // Auto-closes popup when the pin is panned/zoomed out of the visible map area.
-  const popupPosition = useMemo(() => {
-    if (!selectedWarehouseData || !mapRef.current) return null;
-
-    const map = mapRef.current.getMap();
-    const canvas = map.getCanvas();
-    const point = mapRef.current.project([
-      selectedWarehouseData.longitude,
-      selectedWarehouseData.latitude,
-    ]);
-
-    // Close popup if the pin is outside the visible map area
-    const mapWidth = canvas.clientWidth;
-    const mapHeight = canvas.clientHeight;
-    if (point.x < 0 || point.x > mapWidth || point.y < 0 || point.y > mapHeight) {
-      return null;
-    }
-
-    return { x: point.x, y: point.y };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedWarehouseData, mapMoveCount]);
-
-  // Trigger re-computation of popup position on map move/zoom
-  const handleMapMove = useCallback(() => {
-    if (selectedWarehouse) {
-      setMapMoveCount((c) => c + 1);
-    }
-  }, [selectedWarehouse]);
-
-  // Close popup when clicking on the map (but not on a marker or the popup itself)
-  const handleMapClick = useCallback(() => {
-    setSelectedWarehouse(null);
-  }, []);
 
   if (filteredWarehouses.length === 0) {
     return (
@@ -238,46 +234,26 @@ export function WarehouseMap({ warehouses, filter = null }: WarehouseMapProps) {
       className="warehouse-map-container"
       style={{ width: "100%", height: "100%", position: "relative" }}
     >
-      <Map
-        ref={mapRef}
-        initialViewState={initialViewState}
+      <MapContainer
+        center={center}
+        zoom={4.2}
         style={{ width: "100%", height: "100%" }}
-        mapStyle="mapbox://styles/mapbox/streets-v12"
-        mapboxAccessToken={env.VITE_MAPBOX_ACCESS_TOKEN}
-        interactiveLayerIds={[]}
         attributionControl={true}
-        projection="mercator"
-        onMove={handleMapMove}
-        onClick={handleMapClick}
       >
-        {filteredWarehouses.map((warehouse) => (
-          <Marker
-            key={warehouse.warehouseId}
-            latitude={warehouse.latitude}
-            longitude={warehouse.longitude}
-            anchor="center"
-            onClick={(e) => {
-              e.originalEvent.stopPropagation();
-              setSelectedWarehouse(warehouse.warehouseId);
-            }}
-          >
-            <div
-              data-marker
-              style={{
-                width: 24,
-                height: 24,
-                borderRadius: "50%",
-                backgroundColor: STATUS_COLORS[warehouse.status],
-                border: "2px solid white",
-                cursor: "pointer",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.2)",
-              }}
-            />
-          </Marker>
-        ))}
-      </Map>
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          minZoom={1}
+          maxZoom={19}
+        />
+        <MapInner
+          filteredWarehouses={filteredWarehouses}
+          selectedWarehouse={selectedWarehouse}
+          onSelectWarehouse={setSelectedWarehouse}
+          onPopupPosition={setPopupPosition}
+        />
+      </MapContainer>
 
-      {/* Custom popup rendered outside the Map to avoid overflow clipping */}
       {selectedWarehouseData && popupPosition && (
         <div
           className="warehouse-map-popup"
@@ -287,27 +263,31 @@ export function WarehouseMap({ warehouses, filter = null }: WarehouseMapProps) {
             top: popupPosition.y,
             transform: "translate(-50%, -100%)",
             marginTop: -15,
-            zIndex: 10,
+            zIndex: 1000,
             pointerEvents: "auto",
           }}
         >
           <div className="mapboxgl-popup-content">
-            <button
-              className="mapboxgl-popup-close-button"
-              type="button"
-              aria-label="Close popup"
-              onClick={() => {
-                setSelectedWarehouse(null);
-              }}
-            >
-              ×
-            </button>
-            <div className="p-2">
-              <h3 className="font-semibold">{selectedWarehouseData.warehouseName}</h3>
-              <p className="text-muted-foreground text-sm">
-                {selectedWarehouseData.concessionaireName}
-              </p>
-              <hr className="my-2" />
+            <div className="warehouse-map-popup-header">
+              <div>
+                <h3 className="font-semibold">{selectedWarehouseData.warehouseName}</h3>
+                <p className="text-muted-foreground text-sm">
+                  {selectedWarehouseData.concessionaireName}
+                </p>
+              </div>
+              <button
+                className="mapboxgl-popup-close-button"
+                type="button"
+                aria-label="Close popup"
+                onClick={() => {
+                  setSelectedWarehouse(null);
+                }}
+              >
+                ×
+              </button>
+            </div>
+            <hr className="warehouse-map-popup-divider" />
+            <div className="warehouse-map-popup-body">
               <PopupTemperatureBody warehouse={selectedWarehouseData} />
             </div>
           </div>
