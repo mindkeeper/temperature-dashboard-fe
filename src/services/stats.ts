@@ -7,8 +7,7 @@ export interface TimeseriesPoint {
 
 export interface TemperatureKpi {
   breachCount: number;
-  totalWindows: number;
-  breachPercentage: number;
+  totalDurationMinutes: number | null;
 }
 
 export interface WarehouseTimeseries {

@@ -7,7 +7,6 @@ import ConcessionairesPage from "@/pages/concessionaires";
 import DashboardPage from "@/pages/dashboard";
 import DeviceConfigPage from "@/pages/device-config";
 import IndexPage from "@/pages/index";
-import LiveDataPage from "@/pages/live-data";
 import LoginPage from "@/pages/login";
 import UsersPage from "@/pages/users";
 
@@ -33,14 +32,6 @@ export function AppRouter() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="live-data"
-            element={
-              <ProtectedRoute>
-                <LiveDataPage />
               </ProtectedRoute>
             }
           />

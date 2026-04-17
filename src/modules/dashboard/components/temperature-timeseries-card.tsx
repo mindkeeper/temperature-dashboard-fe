@@ -32,8 +32,14 @@ const CHART_COLORS = [
 
 const BREACH_THRESHOLD = -10;
 
-export function TemperatureTimeseriesCard() {
-  const [selectedConcessId, setSelectedConcessId] = useState<string | null>(null);
+interface TemperatureTimeseriesCardProps {
+  initialConcessId?: string;
+}
+
+export function TemperatureTimeseriesCard({ initialConcessId }: TemperatureTimeseriesCardProps) {
+  const [selectedConcessId, setSelectedConcessId] = useState<string | null>(
+    initialConcessId ?? null
+  );
   const [_selectedConcessName, setSelectedConcessName] = useState<string | null>(null);
   const [focusedWarehouseId, setFocusedWarehouseId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState(() => ({
@@ -215,7 +221,9 @@ export function TemperatureTimeseriesCard() {
 
       {/* Controls row */}
       <div className="flex flex-wrap items-center gap-2 px-6 pb-2">
-        <ConcessionaireCombobox value={selectedConcessId} onValueChange={handleConcessChange} />
+        {!initialConcessId && (
+          <ConcessionaireCombobox value={selectedConcessId} onValueChange={handleConcessChange} />
+        )}
         <DateRangePresets
           startDate={dateRange.startDate}
           endDate={dateRange.endDate}
@@ -338,7 +346,7 @@ export function TemperatureTimeseriesCard() {
               {warehouses.map((wh) => {
                 const isFocused = focusedWarehouseId === wh.warehouseId;
                 const isFaded = focusedWarehouseId !== null && !isFocused;
-                const hasBreach = wh.kpi.breachPercentage > 0;
+                const hasBreach = wh.kpi.breachCount > 0;
 
                 return (
                   <div
@@ -365,7 +373,9 @@ export function TemperatureTimeseriesCard() {
                       {wh.kpi.breachCount} breaches
                     </div>
                     <div className="text-muted-foreground text-sm">
-                      {wh.kpi.breachPercentage.toFixed(1)}% of {wh.kpi.totalWindows} windows
+                      {wh.kpi.totalDurationMinutes !== null
+                        ? `${wh.kpi.totalDurationMinutes} min total`
+                        : "No breaches"}
                     </div>
                   </div>
                 );

@@ -1,11 +1,6 @@
-import {
-  type ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+import { type ColumnDef, flexRender, getCoreRowModel, useReactTable } from "@tanstack/react-table";
 import { formatDistanceToNow } from "date-fns";
+import { useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -23,83 +18,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { type BreachEvent } from "@/services/breach-log";
 
-interface BreachEvent {
-  id: string;
-  warehouseName: string;
-  startedAt: Date;
-  durationMinutes: number;
-  maxTemperature: number;
-  unit: string;
-  status: "Resolved" | "Active";
+import { useBreachLog } from "../hooks/use-breach-log";
+
+interface BreachLogTableProps {
+  concessId?: string;
 }
 
-// TODO: replace with real API when breach history endpoint is available
-const MOCK_BREACH_EVENTS: BreachEvent[] = [
-  {
-    id: "1",
-    warehouseName: "Warehouse A",
-    startedAt: new Date(Date.now() - 3 * 60 * 60 * 1000 + 12 * 60 * 1000),
-    durationMinutes: 14,
-    maxTemperature: -8.3,
-    unit: "C",
-    status: "Resolved",
-  },
-  {
-    id: "2",
-    warehouseName: "Warehouse B",
-    startedAt: new Date(Date.now() - 5 * 60 * 60 * 1000),
-    durationMinutes: 32,
-    maxTemperature: -5.1,
-    unit: "C",
-    status: "Resolved",
-  },
-  {
-    id: "3",
-    warehouseName: "Warehouse A",
-    startedAt: new Date(Date.now() - 24 * 60 * 60 * 1000 - 30 * 60 * 1000),
-    durationMinutes: 5,
-    maxTemperature: -9.2,
-    unit: "C",
-    status: "Resolved",
-  },
-  {
-    id: "4",
-    warehouseName: "Warehouse C",
-    startedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    durationMinutes: 21,
-    maxTemperature: -7.8,
-    unit: "C",
-    status: "Resolved",
-  },
-  {
-    id: "5",
-    warehouseName: "Warehouse B",
-    startedAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    durationMinutes: 8,
-    maxTemperature: -9.9,
-    unit: "C",
-    status: "Resolved",
-  },
-  {
-    id: "6",
-    warehouseName: "Warehouse A",
-    startedAt: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
-    durationMinutes: 45,
-    maxTemperature: -3.2,
-    unit: "C",
-    status: "Active",
-  },
-  {
-    id: "7",
-    warehouseName: "Warehouse C",
-    startedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    durationMinutes: 12,
-    maxTemperature: -8.1,
-    unit: "C",
-    status: "Resolved",
-  },
-];
+const PAGE_SIZE = 5;
 
 const columns: ColumnDef<BreachEvent>[] = [
   {
@@ -112,14 +39,19 @@ const columns: ColumnDef<BreachEvent>[] = [
     header: "Started",
     cell: ({ row }) => (
       <span className="text-muted-foreground text-sm">
-        {formatDistanceToNow(row.getValue<Date>("startedAt"), { addSuffix: true })}
+        {formatDistanceToNow(new Date(row.getValue<string>("startedAt")), {
+          addSuffix: true,
+        })}
       </span>
     ),
   },
   {
     accessorKey: "durationMinutes",
     header: "Duration",
-    cell: ({ row }) => <span>{row.getValue<number>("durationMinutes")} min</span>,
+    cell: ({ row }) => {
+      const duration = row.getValue<number | null>("durationMinutes");
+      return <span>{duration === null ? "Ongoing" : `${duration} min`}</span>;
+    },
   },
   {
     id: "maxTemperature",
@@ -150,21 +82,32 @@ const columns: ColumnDef<BreachEvent>[] = [
   },
 ];
 
-const PAGE_SIZE = 5;
+export function BreachLogTable({ concessId }: BreachLogTableProps) {
+  const [page, setPage] = useState(1);
 
-export function BreachLogTable() {
-  const table = useReactTable({
-    data: MOCK_BREACH_EVENTS,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: PAGE_SIZE } },
+  const { data, isLoading } = useBreachLog({
+    concessId,
+    page,
+    limit: PAGE_SIZE,
   });
 
-  const { pageIndex, pageSize } = table.getState().pagination;
-  const totalRows = table.getFilteredRowModel().rows.length;
-  const from = pageIndex * pageSize + 1;
-  const to = Math.min(from + pageSize - 1, totalRows);
+  const events = data?.data ?? [];
+  const pagination = data?.meta.pagination;
+
+  const table = useReactTable({
+    data: events,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    manualPagination: true,
+    pageCount: pagination?.totalPages ?? 1,
+  });
+
+  const from = pagination ? (page - 1) * PAGE_SIZE + 1 : 0;
+  const to = pagination ? Math.min(page * PAGE_SIZE, pagination.total) : 0;
+  const total = pagination?.total ?? 0;
+
+  const canPreviousPage = page > 1;
+  const canNextPage = pagination ? page < pagination.totalPages : false;
 
   return (
     <Card>
@@ -173,7 +116,9 @@ export function BreachLogTable() {
         <p className="text-muted-foreground text-sm">Recent temperature breach events</p>
       </CardHeader>
       <CardContent className="space-y-4">
-        {MOCK_BREACH_EVENTS.length === 0 ? (
+        {isLoading ? (
+          <p className="text-muted-foreground py-8 text-center text-sm">Loading...</p>
+        ) : events.length === 0 ? (
           <p className="text-muted-foreground py-8 text-center text-sm">No breach events found</p>
         ) : (
           <>
@@ -202,30 +147,28 @@ export function BreachLogTable() {
               </TableBody>
             </Table>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-end gap-4">
               <p className="text-muted-foreground text-sm">
-                {from}–{to} of {totalRows} events
+                {total === 0 ? "0 events" : `${from}–${to} of ${total} events`}
               </p>
-              <Pagination className="w-auto">
+              <Pagination className="mx-0 w-auto">
                 <PaginationContent>
                   <PaginationItem>
                     <PaginationPrevious
                       onClick={() => {
-                        table.previousPage();
+                        if (canPreviousPage) setPage((p) => p - 1);
                       }}
-                      aria-disabled={!table.getCanPreviousPage()}
-                      className={
-                        !table.getCanPreviousPage() ? "pointer-events-none opacity-50" : ""
-                      }
+                      aria-disabled={!canPreviousPage}
+                      className={!canPreviousPage ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                   <PaginationItem>
                     <PaginationNext
                       onClick={() => {
-                        table.nextPage();
+                        if (canNextPage) setPage((p) => p + 1);
                       }}
-                      aria-disabled={!table.getCanNextPage()}
-                      className={!table.getCanNextPage() ? "pointer-events-none opacity-50" : ""}
+                      aria-disabled={!canNextPage}
+                      className={!canNextPage ? "pointer-events-none opacity-50" : ""}
                     />
                   </PaginationItem>
                 </PaginationContent>

@@ -1,5 +1,4 @@
 import {
-  Activity,
   Building2,
   LayoutDashboard,
   LogOut,
@@ -35,12 +34,6 @@ const menuItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
-    roles: ["CONCESSIONAIRE", "HEADOFFICE"] as AuthUser["role"][],
-  },
-  {
-    label: "Live Data",
-    icon: Activity,
-    path: "/live-data",
     roles: ["CONCESSIONAIRE", "HEADOFFICE"] as AuthUser["role"][],
   },
   {

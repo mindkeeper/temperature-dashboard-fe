@@ -166,10 +166,10 @@ export function ConcessionaireDashboard() {
       </div>
 
       {/* Time-series Chart */}
-      <TemperatureTimeseriesCard />
+      <TemperatureTimeseriesCard initialConcessId={concessId} />
 
       {/* Breach Log */}
-      <BreachLogTable />
+      <BreachLogTable concessId={concessId} />
     </div>
   );
 }
