@@ -5,6 +5,7 @@ const envSchema = z.object({
   VITE_APP_ENV: z.enum(["development", "staging", "production"]),
   VITE_ENABLE_MSW: z.string().optional(),
   VITE_MAPTILER_API_KEY: z.string().optional(),
+  VITE_WEBSOCKET_URL: z.url(),
 });
 
 export const env = envSchema.parse(import.meta.env);

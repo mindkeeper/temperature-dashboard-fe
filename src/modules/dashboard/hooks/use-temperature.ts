@@ -42,7 +42,7 @@ export const useTemperature = () => {
     }
 
     // Connect to NestJS live-data WebSocket endpoint
-    const socket: Socket = io("http://localhost:3000/live-data", {
+    const socket: Socket = io(`${import.meta.env.VITE_WEBSOCKET_URL}/live-data`, {
       extraHeaders: {
         Authorization: `Bearer ${token}`,
       },
