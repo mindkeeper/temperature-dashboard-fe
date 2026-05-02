@@ -14,7 +14,7 @@ interface WarehouseMapProps {
 const STALE_THRESHOLD_MS = 10 * 1000;
 
 const getTemperatureStatus = (temp: number): "green" | "orange" | "red" => {
-  if (temp <= -20) return "green";
+  if (temp <= -16) return "green";
   if (temp <= -11) return "orange";
   return "red";
 };
