@@ -24,6 +24,13 @@ export interface GetTimeseriesParams {
   interval?: string;
 }
 
+export interface ExportTimeseriesParams {
+  concessId: string;
+  startDate?: string;
+  endDate?: string;
+  interval?: string;
+}
+
 interface TimeseriesResponse {
   message: string;
   data: WarehouseTimeseries[];
@@ -35,5 +42,13 @@ export const statsService = {
       params,
     });
     return response.data;
+  },
+
+  async exportTimeseries(params: ExportTimeseriesParams): Promise<Blob> {
+    const response = await apiClient.get("/stats/timeseries/export", {
+      params,
+      responseType: "blob",
+    });
+    return response.data as Blob;
   },
 };

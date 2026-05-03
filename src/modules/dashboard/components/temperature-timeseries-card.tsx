@@ -1,5 +1,5 @@
 import { format } from "date-fns";
-import { Thermometer } from "lucide-react";
+import { Download, Thermometer } from "lucide-react";
 import { useCallback, useMemo, useRef, useState } from "react";
 import {
   Brush,
@@ -13,9 +13,11 @@ import {
   YAxis,
 } from "recharts";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import type { ChartConfig } from "@/components/ui/chart";
+import { statsService } from "@/services/stats";
 
 import { useTimeseries } from "../hooks/use-timeseries";
 
@@ -51,6 +53,7 @@ export function TemperatureTimeseriesCard({ initialConcessId }: TemperatureTimes
   const [brushRange, setBrushRange] = useState<{ startIndex: number; endIndex: number } | null>(
     null
   );
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleConcessChange = useCallback((id: string | null, name: string | null) => {
     setSelectedConcessId(id);
@@ -208,6 +211,29 @@ export function TemperatureTimeseriesCard({ initialConcessId }: TemperatureTimes
     }
   }, []);
 
+  const handleExport = useCallback(async () => {
+    if (!selectedConcessId) return;
+    setIsExporting(true);
+    try {
+      const blob = await statsService.exportTimeseries({
+        concessId: selectedConcessId,
+        startDate: dateRange.startDate.toISOString(),
+        endDate: dateRange.endDate.toISOString(),
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `temperature-export-${date}.zip`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } finally {
+      setIsExporting(false);
+    }
+  }, [selectedConcessId, dateRange]);
+
   return (
     <Card className="flex shrink-0 flex-col" style={{ height: 520 }}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -217,6 +243,18 @@ export function TemperatureTimeseriesCard({ initialConcessId }: TemperatureTimes
             Temperature Timeseries
           </CardTitle>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!selectedConcessId || isLoading || isExporting}
+          onClick={() => {
+            void handleExport();
+          }}
+          className="flex items-center gap-1.5"
+        >
+          <Download className="h-4 w-4" />
+          {isExporting ? "Exporting..." : "Export CSV"}
+        </Button>
       </CardHeader>
 
       {/* Controls row */}
