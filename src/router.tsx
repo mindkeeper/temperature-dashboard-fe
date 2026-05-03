@@ -2,12 +2,14 @@ import { BrowserRouter, Route, Routes } from "react-router";
 
 import { RootLayout } from "@/components/layout/root-layout";
 import { AuthGuard, ProtectedRoute } from "@/modules/auth";
+import ConcessionaireConfigPageRoute from "@/pages/concessionaire-config";
 import ConcessionaireDetailPage from "@/pages/concessionaire-detail";
 import ConcessionairesPage from "@/pages/concessionaires";
 import DashboardPage from "@/pages/dashboard";
 import DeviceConfigPage from "@/pages/device-config";
 import IndexPage from "@/pages/index";
 import LoginPage from "@/pages/login";
+import ProfilePageRoute from "@/pages/profile";
 import UsersPage from "@/pages/users";
 
 export function AppRouter() {
@@ -64,6 +66,22 @@ export function AppRouter() {
             element={
               <ProtectedRoute requiredRole="SUPERADMIN">
                 <ConcessionaireDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <ProtectedRoute requiredRole={["CONCESSIONAIRE", "HEADOFFICE"]}>
+                <ProfilePageRoute />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="concessionaire-config"
+            element={
+              <ProtectedRoute requiredRole="CONCESSIONAIRE">
+                <ConcessionaireConfigPageRoute />
               </ProtectedRoute>
             }
           />

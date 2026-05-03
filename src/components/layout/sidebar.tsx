@@ -6,6 +6,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Radio,
+  UserCircle,
   Users,
 } from "lucide-react";
 import { useState } from "react";
@@ -34,6 +35,18 @@ const menuItems = [
     label: "Dashboard",
     icon: LayoutDashboard,
     path: "/dashboard",
+    roles: ["CONCESSIONAIRE", "HEADOFFICE"] as AuthUser["role"][],
+  },
+  {
+    label: "My Concessionaire",
+    icon: Building2,
+    path: "/concessionaire-config",
+    roles: ["CONCESSIONAIRE"] as AuthUser["role"][],
+  },
+  {
+    label: "Profile",
+    icon: UserCircle,
+    path: "/profile",
     roles: ["CONCESSIONAIRE", "HEADOFFICE"] as AuthUser["role"][],
   },
   {
@@ -109,15 +122,21 @@ function SidebarContent({ onNavigate }: SidebarContentProps) {
       {isAuthenticated && user && (
         <div className="border-t p-4">
           <div className="flex items-center gap-3 px-3">
-            <Avatar className="h-9 w-9">
-              <AvatarFallback className="text-xs">
-                {getInitials(user.name ?? "User")}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 overflow-hidden">
-              <p className="truncate text-sm font-medium">{user.name ?? "User"}</p>
-              <p className="text-muted-foreground truncate text-xs">{user.email}</p>
-            </div>
+            <Link
+              to="/profile"
+              onClick={onNavigate}
+              className="flex flex-1 items-center gap-3 overflow-hidden hover:opacity-80"
+            >
+              <Avatar className="h-9 w-9">
+                <AvatarFallback className="text-xs">
+                  {getInitials(user.name ?? "User")}
+                </AvatarFallback>
+              </Avatar>
+              <div className="flex-1 overflow-hidden">
+                <p className="truncate text-sm font-medium">{user.name ?? "User"}</p>
+                <p className="text-muted-foreground truncate text-xs">{user.email}</p>
+              </div>
+            </Link>
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

@@ -42,6 +42,8 @@ export interface Concessionaire {
   address: string;
   latitude: number;
   longitude: number;
+  telegramChatId?: string | null;
+  alertEmails?: string[];
   createdAt?: string;
   updatedAt?: string;
   warehouses: Warehouse[];
@@ -65,6 +67,11 @@ export const concessionaireService = {
 
   async getConcessionaireById(id: string): Promise<ApiResponse<Concessionaire>> {
     const response = await apiClient.get<ApiResponse<Concessionaire>>(`/concessionaires/${id}`);
+    return response.data;
+  },
+
+  async getMyConcessionaire(): Promise<ApiResponse<Concessionaire>> {
+    const response = await apiClient.get<ApiResponse<Concessionaire>>("/concessionaires/me");
     return response.data;
   },
 };

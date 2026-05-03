@@ -6,6 +6,7 @@ import type { AuthState, AuthUser, Session } from "../types/auth.types";
 interface AuthStore extends AuthState {
   setAuth: (user: AuthUser, session: Session) => void;
   setSession: (session: Session) => void;
+  setUser: (partial: Partial<AuthUser>) => void;
   clearAuth: () => void;
   getToken: () => string | null;
 }
@@ -19,6 +20,10 @@ export const useAuthStore = create<AuthStore>()(
         isAuthenticated: false,
         setAuth: (user, session) => set({ user, session, isAuthenticated: true }),
         setSession: (session) => set({ session }),
+        setUser: (partial) =>
+          set((state) => ({
+            user: state.user ? { ...state.user, ...partial } : state.user,
+          })),
         clearAuth: () => set({ user: null, session: null, isAuthenticated: false }),
         getToken: () => get().session?.accessToken ?? null,
       }),
