@@ -11,7 +11,7 @@ interface ConcessionaireTemperatureCardProps {
 }
 
 const getTemperatureStatus = (temp: number): "green" | "orange" | "red" => {
-  if (temp <= -20) return "green";
+  if (temp <= -16) return "green";
   if (temp <= -11) return "orange";
   return "red";
 };
