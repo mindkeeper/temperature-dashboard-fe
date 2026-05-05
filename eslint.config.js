@@ -87,6 +87,8 @@ export default defineConfig([
   {
     files: ["**/*.{ts,tsx}"],
     rules: {
+      // Allow || when intentionally coercing falsy values (empty string → null/undefined)
+      "@typescript-eslint/prefer-nullish-coalescing": ["error", { ignorePrimitives: { string: true } }],
       // Unused vars: error, but ignore _-prefixed names (intentionally unused)
       "no-unused-vars": "off", // disabled in favour of the TS-aware version below
       "@typescript-eslint/no-unused-vars": [

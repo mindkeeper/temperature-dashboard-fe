@@ -44,8 +44,8 @@ export function ConcessionaireDetailsTab({ concessionaire }: ConcessionaireDetai
       address: concessionaire.address,
       latitude: String(concessionaire.latitude),
       longitude: String(concessionaire.longitude),
-      telegramChatId: "",
-      alertEmails: "",
+      telegramChatId: concessionaire.telegramChatId ?? "",
+      alertEmails: concessionaire.alertEmails?.join(", ") ?? "",
     },
   });
 
@@ -55,8 +55,8 @@ export function ConcessionaireDetailsTab({ concessionaire }: ConcessionaireDetai
       address: concessionaire.address,
       latitude: String(concessionaire.latitude),
       longitude: String(concessionaire.longitude),
-      telegramChatId: "",
-      alertEmails: "",
+      telegramChatId: concessionaire.telegramChatId ?? "",
+      alertEmails: concessionaire.alertEmails?.join(", ") ?? "",
     });
   }, [concessionaire, form]);
 
@@ -76,7 +76,7 @@ export function ConcessionaireDetailsTab({ concessionaire }: ConcessionaireDetai
           address: data.address,
           latitude: parseFloat(data.latitude),
           longitude: parseFloat(data.longitude),
-          telegramChatId: data.telegramChatId ?? null,
+          telegramChatId: data.telegramChatId || null,
           alertEmails,
         },
       },
