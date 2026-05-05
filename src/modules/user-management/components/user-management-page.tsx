@@ -74,10 +74,11 @@ export function UserManagementPage() {
     role: "CONCESSIONAIRE" | "HEADOFFICE" | "SUPERADMIN";
     concessionaireId?: string;
   }) {
+    const { concessionaireId, ...rest } = formData;
     const payload = {
-      ...formData,
+      ...rest,
       name: formData.name ?? undefined,
-      concessionaireId: formData.concessionaireId ?? undefined,
+      ...(concessionaireId ? { concessionaireId } : {}),
     };
 
     if (editingUser) {
