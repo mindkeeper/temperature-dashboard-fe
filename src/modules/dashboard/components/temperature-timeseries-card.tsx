@@ -324,8 +324,9 @@ export function TemperatureTimeseriesCard({ initialConcessId }: TemperatureTimes
                   />
                   <YAxis
                     reversed
+                    width={80}
                     tick={{ fontSize: 14 }}
-                    tickFormatter={(val: number) => `${val.toString()}°C`}
+                    tickFormatter={(val: number) => `${Math.round(val * 1000) / 1000}°C`}
                   />
                   <Tooltip content={<ChartTooltipContent />} />
                   <Legend
